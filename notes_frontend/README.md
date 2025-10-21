@@ -1,82 +1,59 @@
-# Lightweight React Template for KAVIA
+# Simple Notes – React + Supabase
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A simple note-taking app where users can create, edit, view, and delete notes.  
+Styled with the Ocean Professional theme (blue & amber accents).
 
 ## Features
+- Create, edit, and delete notes
+- Notes listed in reverse chronological order by updated time
+- Accessible UI: semantic roles, aria labels, focus management in modal
+- Optional realtime updates via Supabase Realtime (disabled by default)
+- Clean, modern design using CSS only (no UI frameworks)
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+## Requirements
+Environment variables (set in `.env` in the container root or project root recognized by CRA):
+- REACT_APP_SUPABASE_URL=your_supabase_url
+- REACT_APP_SUPABASE_KEY=your_supabase_anon_or_service_key
+- REACT_APP_SUPABASE_ENABLE_REALTIME=true (optional; defaults to false)
 
-## Getting Started
+If URL or KEY are missing, the app renders but will show an empty state and console warning.
 
-In the project directory, you can run:
+## Supabase Table
+Create a table named `notes` with the following columns:
+- id: uuid (primary key, default gen_random_uuid() or uuid_generate_v4())
+- title: text
+- content: text
+- created_at: timestamp with time zone, default now()
+- updated_at: timestamp with time zone, update this on insert/update (via trigger or managed in queries)
 
-### `npm start`
+RLS: Permit anon read/write as suits your environment (or use policies aligned with your auth model).
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Scripts
+- npm install
+- npm start
+- npm run build
+- npm test
 
-### `npm test`
+## File Structure
+- src/supabaseClient.js — initializes Supabase client from env variables
+- src/services/notesService.js — CRUD and optional realtime subscription
+- src/components/Header.js — App header with New Note action
+- src/components/NotesList.js — Cards list with edit/delete
+- src/components/NoteEditorModal.js — Modal for create/edit (title required)
+- src/components/EmptyState.js — Prompt to create first note
+- src/App.js — App shell, state, handlers, and rendering
+- src/App.css, src/index.css — Ocean Professional styles
 
-Launches the test runner in interactive watch mode.
+## Styling – Ocean Professional
+- Primary: #2563EB
+- Secondary/Success: #F59E0B
+- Error: #EF4444
+- Text: #111827
+- Background: #f9fafb
+- Surface: #ffffff
 
-### `npm run build`
+Includes subtle gradients, rounded corners, shadows, and smooth transitions.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-## Customization
-
-### Colors
-
-The main brand colors are defined as CSS variables in `src/App.css`:
-
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
-```
-
-### Components
-
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
-
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
-
-## Learn More
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Notes
+- Realtime is disabled unless explicitly enabled via `REACT_APP_SUPABASE_ENABLE_REALTIME`.
+- The UI includes helpful error messages if requests fail.

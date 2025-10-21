@@ -120,12 +120,14 @@ function App() {
         message: e?.message || String(e),
         status: e?.status,
         code: e?.code,
+        details: e,
       });
       const rlsHint =
         e?.code === '42501' || e?.message?.toLowerCase?.().includes('rls')
           ? ' Check your Supabase Row Level Security policies for the notes table.'
           : '';
-      setErrorMsg(`Failed to save note.${rlsHint}`);
+      const errText = e?.message ? ` Error: ${e.message}` : '';
+      setErrorMsg(`Failed to save note.${rlsHint}${errText}`);
     }
   };
 

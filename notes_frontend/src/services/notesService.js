@@ -28,7 +28,12 @@ function handleResponse({ data, error }) {
           : undefined,
       details: error,
     });
-    throw error;
+    // attach a friendlier message for upstream UI while preserving original fields
+    const enriched = Object.assign(new Error(error.message), {
+      status: error.status,
+      code: error.code,
+    });
+    throw enriched;
   }
   return data;
 }
@@ -88,6 +93,7 @@ export async function createNote({ title, content }) {
       message: err?.message || String(err),
       code: err?.code,
       status: err?.status,
+      context: 'insert into public.notes',
     });
     throw err; // let UI handle showing error/rollback
   }
@@ -108,6 +114,7 @@ export async function updateNote(id, data) {
       message: err?.message || String(err),
       code: err?.code,
       status: err?.status,
+      context: { id, op: 'update public.notes' },
     });
     throw err; // let UI handle showing error/rollback
   }
@@ -128,6 +135,7 @@ export async function deleteNote(id) {
       message: err?.message || String(err),
       code: err?.code,
       status: err?.status,
+      context: { id, op: 'delete from public.notes' },
     });
     return false;
   }

@@ -14,6 +14,8 @@ import App from './App';
       const url = new URL(raw.replace(/^http:\/\//i, 'https://'));
       // eslint-disable-next-line no-console
       console.info(`[Startup] Using Supabase URL host: ${url.host}`);
+      // eslint-disable-next-line no-console
+      console.info('[Startup] Supabase key present:', !!(process.env.REACT_APP_SUPABASE_KEY || process.env.SUPABASE_KEY));
     } else {
       // eslint-disable-next-line no-console
       console.warn('[Startup] No Supabase URL configured. App will load with empty state.');

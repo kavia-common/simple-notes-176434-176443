@@ -17,15 +17,17 @@ import { getSupabaseClient, isRealtimeEnabled } from '../supabaseClient';
 function handleResponse({ data, error }) {
   if (error) {
     // eslint-disable-next-line no-console
-    console.error(
-      '[Supabase] Request error:',
-      {
-        message: error.message,
-        status: error.status,
-        name: error.name,
-        details: error,
-      }
-    );
+    console.error('[Supabase] Request error:', {
+      message: error.message,
+      status: error.status,
+      name: error.name,
+      code: error.code,
+      hint:
+        error.code === '42501' || error.message?.toLowerCase?.().includes('rls')
+          ? 'Row Level Security may be blocking this operation. Ensure RLS policies allow anon to insert/update/delete or use authenticated user with proper policies.'
+          : undefined,
+      details: error,
+    });
     throw error;
   }
   return data;
@@ -44,7 +46,13 @@ export async function listNotes() {
     return handleResponse(res) || [];
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn('[NotesService] listNotes failed, returning empty list:', err?.message || err);
+    console.warn('[NotesService] listNotes failed, returning empty list:', {
+      message: err?.message || String(err),
+      code: err?.code,
+      status: err?.status,
+      hint:
+        'Verify REACT_APP_SUPABASE_URL/KEY and that notes table exists. If RLS is enabled, add a SELECT policy for the anon or your auth role.',
+    });
     return [];
   }
 }
@@ -71,15 +79,16 @@ export async function createNote({ title, content }) {
     const supabase = getSupabaseClient();
     if (!supabase) return null;
     const now = new Date().toISOString();
-    const res = await supabase
-      .from('notes')
-      .insert([{ title, content: content || '', created_at: now, updated_at: now }])
-      .select()
-      .single();
+    const payload = { title, content: content ?? '', created_at: now, updated_at: now };
+    const res = await supabase.from('notes').insert([payload]).select().single();
     return handleResponse(res);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn('[NotesService] createNote failed:', err?.message || err);
+    console.warn('[NotesService] createNote failed:', {
+      message: err?.message || String(err),
+      code: err?.code,
+      status: err?.status,
+    });
     throw err; // let UI handle showing error/rollback
   }
 }
@@ -95,7 +104,11 @@ export async function updateNote(id, data) {
     return handleResponse(res);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn('[NotesService] updateNote failed:', err?.message || err);
+    console.warn('[NotesService] updateNote failed:', {
+      message: err?.message || String(err),
+      code: err?.code,
+      status: err?.status,
+    });
     throw err; // let UI handle showing error/rollback
   }
 }
@@ -111,7 +124,11 @@ export async function deleteNote(id) {
     return true;
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.warn('[NotesService] deleteNote failed:', err?.message || err);
+    console.warn('[NotesService] deleteNote failed:', {
+      message: err?.message || String(err),
+      code: err?.code,
+      status: err?.status,
+    });
     return false;
   }
 }

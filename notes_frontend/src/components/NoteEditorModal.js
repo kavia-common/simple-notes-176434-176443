@@ -11,6 +11,7 @@ export default function NoteEditorModal({ isOpen, onClose, onSave, initialNote }
   const [title, setTitle] = useState(initialNote?.title || '');
   const [content, setContent] = useState(initialNote?.content || '');
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   const titleRef = useRef(null);
 
   useEffect(() => {
@@ -36,12 +37,23 @@ export default function NoteEditorModal({ isOpen, onClose, onSave, initialNote }
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     if (!title.trim()) {
       setError('Title is required.');
       return;
     }
-    onSave({ title: title.trim(), content });
+    try {
+      setSaving(true);
+      await Promise.resolve(onSave({ title: title.trim(), content }));
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('[Modal] Save handler error:', e?.message || e);
+      setError(e?.message || 'Failed to save.');
+      setSaving(false);
+      return;
+    }
+    setSaving(false);
   };
 
   return (
@@ -62,6 +74,7 @@ export default function NoteEditorModal({ isOpen, onClose, onSave, initialNote }
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter note title"
             aria-invalid={!!error}
+            disabled={saving}
           />
           <label htmlFor="note-content" className="label mt-12">
             Content
@@ -73,15 +86,16 @@ export default function NoteEditorModal({ isOpen, onClose, onSave, initialNote }
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write your note..."
             rows={8}
+            disabled={saving}
           />
-          {error && <div className="form-error" role="alert">{error}</div>}
+          {error && <div className="form-error" role="alert" aria-live="assertive">{error}</div>}
         </div>
         <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
+          <button className="btn btn-secondary" onClick={onClose} disabled={saving}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleSave}>
-            Save
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving || !title.trim()}>
+            {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
       </div>

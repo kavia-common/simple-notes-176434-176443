@@ -43,7 +43,11 @@ function App() {
           hint:
             'In Supabase, ensure a notes table exists and RLS allows anon/authenticated select as appropriate.',
         });
-        if (mounted) setErrorMsg('Failed to load notes. Check your Supabase configuration.');
+        const rlsHint =
+          e?.code === '42501' || e?.message?.toLowerCase?.().includes('rls')
+            ? ' (RLS may be blocking SELECT.)'
+            : '';
+        if (mounted) setErrorMsg(`Failed to load notes. Check your Supabase configuration.${rlsHint}`);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -92,35 +96,36 @@ function App() {
   };
 
   const handleSave = async ({ title, content }) => {
+    // Guard: required title
+    if (!title?.trim()) {
+      setErrorMsg('Title is required.');
+      return;
+    }
     try {
       if (editingNote?.id) {
-        // Optimistic update
+        // Update: do NOT optimistically update to avoid UI diverging on RLS errors.
         const id = editingNote.id;
-        const previous = notes;
-        const optimistic = previous.map((n) =>
-          n.id === id ? { ...n, title, content, updated_at: new Date().toISOString() } : n
-        );
-        setNotes(optimistic);
+        const updated = await updateNote(id, { title, content });
+        setNotes((prev) => prev.map((n) => (n.id === id ? updated : n)));
         closeModal();
-        try {
-          const updated = await updateNote(id, { title, content });
-          // Reconcile
-          setNotes((prev) => prev.map((n) => (n.id === id ? updated : n)));
-        } catch (e) {
-          // Rollback
-          setNotes(previous);
-          throw e;
-        }
       } else {
-        // Create
-        closeModal();
+        // Create: only add to list after successful creation
         const created = await createNote({ title, content });
         setNotes((prev) => [created, ...prev]);
+        closeModal();
       }
     } catch (e) {
       // eslint-disable-next-line no-console
-      console.error(e);
-      setErrorMsg('Failed to save note.');
+      console.error('[App] Save note failed:', {
+        message: e?.message || String(e),
+        status: e?.status,
+        code: e?.code,
+      });
+      const rlsHint =
+        e?.code === '42501' || e?.message?.toLowerCase?.().includes('rls')
+          ? ' Check your Supabase Row Level Security policies for the notes table.'
+          : '';
+      setErrorMsg(`Failed to save note.${rlsHint}`);
     }
   };
 

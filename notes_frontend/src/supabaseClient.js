@@ -69,7 +69,8 @@ export function getSupabaseClient() {
         // eslint-disable-next-line no-console
         console.warn('[Supabase] Detected localhost host. Ensure cloud URL is used in production/preview.');
       }
-      // Expected host example: bvkqkxkfnrzmqjybczpq.supabase.co
+      // eslint-disable-next-line no-console
+      console.info('[Supabase] Using anon/public key in frontend. Ensure RLS policies permit intended operations for anon or authenticated role.');
     } catch {
       // noop if URL parsing fails
     }

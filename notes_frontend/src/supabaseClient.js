@@ -15,14 +15,31 @@ import { createClient } from '@supabase/supabase-js';
  *  - REACT_APP_SUPABASE_ENABLE_REALTIME=true|false (default false)
  */
 
+// Normalize and validate a Supabase URL to avoid proxy/misconfigurations.
+function normalizeSupabaseUrl(raw) {
+  if (!raw) return '';
+  let url = String(raw).trim();
+  // Ensure https scheme for browser usage
+  if (url.startsWith('http://')) {
+    // eslint-disable-next-line no-console
+    console.warn('[Supabase] Insecure http URL detected, upgrading to https:', url);
+    url = url.replace(/^http:\/\//i, 'https://');
+  }
+  // Remove trailing slashes to avoid double slash issues
+  url = url.replace(/\/+$/, '');
+  return url;
+}
+
 // PUBLIC_INTERFACE
 export function getSupabaseClient() {
   /** Returns a Supabase client instance configured with environment variables. */
   // Prefer React-exposed variables; fallback to non-prefixed if present to be forgiving.
-  const url =
+  const rawUrl =
     process.env.REACT_APP_SUPABASE_URL ||
     process.env.SUPABASE_URL ||
     '';
+  const url = normalizeSupabaseUrl(rawUrl);
+
   const key =
     process.env.REACT_APP_SUPABASE_KEY ||
     process.env.SUPABASE_KEY ||
@@ -42,6 +59,20 @@ export function getSupabaseClient() {
 
   try {
     const supabase = createClient(url, key);
+    // One-time startup info. Do NOT log keys. Show only host.
+    try {
+      const host = new URL(url).host;
+      // eslint-disable-next-line no-console
+      console.info(`[Supabase] Client initialized. URL host: ${host}`);
+      // If misconfigured to localhost, warn loudly.
+      if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        // eslint-disable-next-line no-console
+        console.warn('[Supabase] Detected localhost host. Ensure cloud URL is used in production/preview.');
+      }
+      // Expected host example: bvkqkxkfnrzmqjybczpq.supabase.co
+    } catch {
+      // noop if URL parsing fails
+    }
     return supabase;
   } catch (e) {
     // eslint-disable-next-line no-console

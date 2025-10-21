@@ -34,56 +34,86 @@ function handleResponse({ data, error }) {
 // PUBLIC_INTERFACE
 export async function listNotes() {
   /** Fetch all notes ordered by updated_at desc. */
-  const supabase = getSupabaseClient();
-  if (!supabase) return [];
-  const res = await supabase
-    .from('notes')
-    .select('*')
-    .order('updated_at', { ascending: false, nullsFirst: false });
-  return handleResponse(res) || [];
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return [];
+    const res = await supabase
+      .from('notes')
+      .select('*')
+      .order('updated_at', { ascending: false, nullsFirst: false });
+    return handleResponse(res) || [];
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[NotesService] listNotes failed, returning empty list:', err?.message || err);
+    return [];
+  }
 }
 
 // PUBLIC_INTERFACE
 export async function getNote(id) {
   /** Fetch single note by id. */
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-  const res = await supabase.from('notes').select('*').eq('id', id).single();
-  return handleResponse(res);
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const res = await supabase.from('notes').select('*').eq('id', id).single();
+    return handleResponse(res);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[NotesService] getNote failed:', err?.message || err);
+    return null;
+  }
 }
 
 // PUBLIC_INTERFACE
 export async function createNote({ title, content }) {
   /** Create a note. Title is required. */
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-  const now = new Date().toISOString();
-  const res = await supabase
-    .from('notes')
-    .insert([{ title, content: content || '', created_at: now, updated_at: now }])
-    .select()
-    .single();
-  return handleResponse(res);
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const now = new Date().toISOString();
+    const res = await supabase
+      .from('notes')
+      .insert([{ title, content: content || '', created_at: now, updated_at: now }])
+      .select()
+      .single();
+    return handleResponse(res);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[NotesService] createNote failed:', err?.message || err);
+    throw err; // let UI handle showing error/rollback
+  }
 }
 
 // PUBLIC_INTERFACE
 export async function updateNote(id, data) {
   /** Update note fields by id. */
-  const supabase = getSupabaseClient();
-  if (!supabase) return null;
-  const payload = { ...data, updated_at: new Date().toISOString() };
-  const res = await supabase.from('notes').update(payload).eq('id', id).select().single();
-  return handleResponse(res);
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return null;
+    const payload = { ...data, updated_at: new Date().toISOString() };
+    const res = await supabase.from('notes').update(payload).eq('id', id).select().single();
+    return handleResponse(res);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[NotesService] updateNote failed:', err?.message || err);
+    throw err; // let UI handle showing error/rollback
+  }
 }
 
 // PUBLIC_INTERFACE
 export async function deleteNote(id) {
   /** Delete a note by id. Returns true on success. */
-  const supabase = getSupabaseClient();
-  if (!supabase) return false;
-  const res = await supabase.from('notes').delete().eq('id', id);
-  handleResponse(res);
-  return true;
+  try {
+    const supabase = getSupabaseClient();
+    if (!supabase) return false;
+    const res = await supabase.from('notes').delete().eq('id', id);
+    handleResponse(res);
+    return true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[NotesService] deleteNote failed:', err?.message || err);
+    return false;
+  }
 }
 
 // PUBLIC_INTERFACE

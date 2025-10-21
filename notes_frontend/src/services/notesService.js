@@ -10,9 +10,24 @@ import { getSupabaseClient, isRealtimeEnabled } from '../supabaseClient';
  *  - updated_at: timestamp (updated via trigger or on updates in queries)
  */
 
-// Utility to wrap Supabase errors
+/**
+ * Utility to wrap Supabase errors with richer logs to aid debugging in UI.
+ * Does not alter thrown error types to preserve upstream handling behavior.
+ */
 function handleResponse({ data, error }) {
-  if (error) throw error;
+  if (error) {
+    // eslint-disable-next-line no-console
+    console.error(
+      '[Supabase] Request error:',
+      {
+        message: error.message,
+        status: error.status,
+        name: error.name,
+        details: error,
+      }
+    );
+    throw error;
+  }
   return data;
 }
 

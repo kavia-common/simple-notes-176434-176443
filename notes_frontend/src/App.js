@@ -35,6 +35,14 @@ function App() {
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
+        // Extra diagnostics for common misconfigurations
+        // eslint-disable-next-line no-console
+        console.warn('[App] Notes load failed. Verify env vars and RLS policies:', {
+          REACT_APP_SUPABASE_URL: !!process.env.REACT_APP_SUPABASE_URL,
+          REACT_APP_SUPABASE_KEY: !!process.env.REACT_APP_SUPABASE_KEY,
+          hint:
+            'In Supabase, ensure a notes table exists and RLS allows anon/authenticated select as appropriate.',
+        });
         if (mounted) setErrorMsg('Failed to load notes. Check your Supabase configuration.');
       } finally {
         if (mounted) setLoading(false);

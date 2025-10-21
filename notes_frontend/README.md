@@ -16,7 +16,15 @@ Environment variables (set in `.env` in the container root or project root recog
 - REACT_APP_SUPABASE_KEY=your_supabase_anon_or_service_key
 - REACT_APP_SUPABASE_ENABLE_REALTIME=true (optional; defaults to false)
 
+The app also supports `SUPABASE_URL` and `SUPABASE_KEY` as fallback names for flexibility, but note Create React App only exposes variables prefixed with `REACT_APP_` to the browser at build time. Prefer using the `REACT_APP_` versions.
+
 If URL or KEY are missing, the app renders but will show an empty state and console warning.
+
+### Troubleshooting
+- If you see "Failed to load notes", open the browser console:
+  - Verify env variables are present (logs will indicate which keys were detected).
+  - Ensure the `notes` table exists in `public` schema.
+  - If Row Level Security (RLS) is enabled, add a `SELECT` policy for the `anon` role (or for authenticated users if you use auth).
 
 ## Supabase Table
 Create a table named `notes` with the following columns:
